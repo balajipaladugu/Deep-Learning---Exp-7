@@ -38,21 +38,17 @@ An Autoencoder is an unsupervised neural network that learns to compress input d
 **Register Number: 2305001024**
 
 ```python
-# === DENOISING AUTOENCODER for MNIST ===
 from tensorflow.keras import layers, models, Input, datasets
 import numpy as np, matplotlib.pyplot as plt, pandas as pd
 
-# === Load and Normalize Data ===
 (x_train, _), (x_test, _) = datasets.mnist.load_data()
 x_train, x_test = x_train.astype('float32') / 255., x_test.astype('float32') / 255.
 x_train, x_test = x_train.reshape(-1, 28, 28, 1), x_test.reshape(-1, 28, 28, 1)
 
-# === Add Gaussian Noise ===
 noise_factor = 0.5
 x_train_noisy = np.clip(x_train + noise_factor * np.random.normal(0, 1, x_train.shape), 0, 1)
 x_test_noisy  = np.clip(x_test  + noise_factor * np.random.normal(0, 1, x_test.shape),  0, 1)
 
-# === Show Noisy Samples ===
 plt.figure(figsize=(20, 2))
 for i in range(10):
     ax = plt.subplot(1, 10, i+1)
@@ -61,10 +57,8 @@ for i in range(10):
 plt.suptitle("Noisy MNIST Samples", fontsize=14)
 plt.show()
 
-# === Model Architecture (Balanced Autoencoder) ===
 inp = Input(shape=(28, 28, 1))
 
-# Encoder
 x = layers.Conv2D(16, (3,3), activation='relu', padding='same')(inp)
 x = layers.MaxPooling2D((2,2), padding='same')(x)
 x = layers.Conv2D(8, (3,3), activation='relu', padding='same')(x)
@@ -72,13 +66,11 @@ x = layers.MaxPooling2D((2,2), padding='same')(x)
 x = layers.Conv2D(8, (3,3), activation='relu', padding='same')(x)
 encoded = layers.MaxPooling2D((2,2), padding='same', name='Encoded_Layer')(x)
 
-# Decoder
 x = layers.Conv2DTranspose(8, (4,4), strides=(1,1), activation='relu', padding='valid')(encoded)
 x = layers.Conv2DTranspose(8, (3,3), strides=(2,2), activation='relu', padding='same')(x)
 x = layers.Conv2DTranspose(16, (3,3), strides=(2,2), activation='relu', padding='same')(x)
 decoded = layers.Conv2D(1, (3,3), activation='sigmoid', padding='same')(x)
 
-# === Compile & Train ===
 autoencoder = models.Model(inp, decoded, name='MNIST_Denoising_Autoencoder')
 autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 autoencoder.summary()
@@ -91,14 +83,11 @@ history = autoencoder.fit(
     validation_data=(x_test_noisy, x_test)
 )
 
-# === Plot Training Curves ===
 metrics = pd.DataFrame(history.history)
 metrics[['loss','val_loss']].plot(title='Training vs Validation Loss', figsize=(8,4))
 plt.show()
 
-# === Denoise Test Images ===
 decoded_imgs = autoencoder.predict(x_test_noisy)
-# === Display Original / Noisy / Denoised Images ===
 n = 10
 plt.figure(figsize=(20, 6))
 for i in range(n):
@@ -108,13 +97,11 @@ for i in range(n):
     ax.axis('off')
     if i == 0: ax.set_title("Original")
 
-    # Noisy
     ax = plt.subplot(3, n, i + 1 + n)
     plt.imshow(x_test_noisy[i].reshape(28, 28), cmap='gray')
     ax.axis('off')
     if i == 0: ax.set_title("Noisy")
 
-    # Denoised
     ax = plt.subplot(3, n, i + 1 + 2*n)
     plt.imshow(decoded_imgs[i].reshape(28, 28), cmap='gray')
     ax.axis('off')
